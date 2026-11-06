@@ -1,5 +1,6 @@
 // Point API at your deployed FastAPI backend (Render/Railway) in production.
-window.ATTENTIONLENS_API = "http://localhost:8000";
+
+window.ATTENTIONLENS_API = "https://YOUR-SERVICE.onrender.com";
 // Replace with your repository URL.
 window.ATTENTIONLENS_GITHUB = "https://github.com/msshahidafridi89-source/attention-lens";
 // Lesson video (YouTube link or 11-character ID). Remove this line to use assets/lesson.mp4 instead.
