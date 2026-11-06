@@ -1,0 +1,33 @@
+You are writing a short quiz for a 40-second lesson video. Use ONLY the story below. Do not use outside knowledge.
+
+STORY (transcript with timestamps):
+[00:01] In a small village in Rajasthan lived a ten-year-old girl named Asha.
+[00:06] She loved helping her grandmother in the courtyard every morning.
+[00:11] One day, her grandmother gave her three seeds: wheat, mustard, and chickpea.
+[00:20] Every morning, Asha carried water in a brass pot.
+[00:30] Asha waited five more days. Then a tiny shoot pushed through the soil under the neem tree.
+[00:36] Asha learned that patience matters as much as effort.
+
+Write EXACTLY these 4 multiple-choice questions, in this order, with exactly these wording, options, and correct answers. Do not change, add, remove, or reorder anything. Each question has 4 options, and exactly one is correct.
+
+Question 1: What is the girl's name?
+Options: Meera / Asha / Anita / Radha
+Correct answer: Asha
+Evidence timestamp: 00:01
+
+Question 2: Who did Asha love helping in the courtyard every morning?
+Options: Her mother / Her teacher / Her grandmother / Her brother
+Correct answer: Her grandmother
+Evidence timestamp: 00:06
+
+Question 3: What did her grandmother give her one day?
+Options: A book / Three seeds / Some sweets / A brass pot
+Correct answer: Three seeds
+Evidence timestamp: 00:11
+
+Question 4: What did Asha carry in a brass pot every morning?
+Options: Milk / Seeds / Sand / Water
+Correct answer: Water
+Evidence timestamp: 00:20
+
+For each question, write a one-sentence explanation that quotes the story line that gives the answer. Return the questions in the exact output format required by the system instructions.

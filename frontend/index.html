@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AttentionLens</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <h1>AttentionLens</h1>
+    <p class="muted">An attention-aware learning prototype</p>
+  </header>
+
+  <main>
+    <section id="intro" class="view active">
+      <h2>Does your attention drift while you learn?</h2>
+      <p>AttentionLens is a research prototype. You watch a short lesson, then answer a short quiz, while your webcam is used to estimate when your attention drifts. At the end you get a report (also as a PDF) showing when you lost focus, what it looked like, and how that relates to what you learned.</p>
+      <p><a id="repoLink" href="#" target="_blank" rel="noopener">View the code on GitHub</a></p>
+
+      <h3>How it works</h3>
+      <ol>
+        <li>A 10-second sensor check (look at the screen, blink three times) makes sure your camera works.</li>
+        <li>A 30-second calibration: you look at 9 dots so the app learns where you look on your screen.</li>
+        <li>The lesson video plays. The app estimates gaze, blinks, eye closure, head pose and posture. Several times you are asked whether your mind wandered.</li>
+        <li>If your attention seems to drop, the video pauses and offers a replay.</li>
+        <li>A short quiz follows, one question at a time (you cannot go back). The camera stays on, and the time spent on each question is recorded.</li>
+        <li>You get a report with a timeline, snapshots of the moments you were not focused, gaze and blink charts, and quiz results.</li>
+      </ol>
+
+      <h3>Your privacy</h3>
+      <ul>
+        <li>Camera video is analysed in your browser. It is never recorded or uploaded.</li>
+        <li>Snapshots are kept only in this page's memory. They are deleted when you close or refresh the tab, or press "Delete all my data". The PDF report is created on your device.</li>
+        <li>The server receives numbers (gaze, head pose, blink rate), your quiz answers and answer times. Quiz answers are sent to an LLM service (Groq) for grading. This app does not store them.</li>
+        <li>The lesson video is embedded from YouTube (privacy-enhanced mode), so YouTube may receive your IP address when the video loads.</li>
+        <li>This is an approximate estimate from a webcam, not a medical or psychological assessment.</li>
+      </ul>
+
+      <label class="check"><input type="checkbox" id="consent"> I agree that a short video and a quiz will run while my webcam is used to estimate my attention.</label>
+      <label class="check"><input type="checkbox" id="blurOpt"> Blur my snapshots (recommended if others can see your screen)</label>
+      <div class="row">
+        <label>Mode
+          <select id="mode">
+            <option value="video">Video</option>
+            <option value="reading">Reading</option>
+          </select>
+        </label>
+        <button id="startBtn" disabled>I agree, start</button>
+      </div>
+      <p id="status" class="muted" role="status"></p>
+      <p id="serverStatus" class="muted small" role="status"></p>
+    </section>
+
+    <section id="sensor" class="view">
+      <h2>Sensor check</h2>
+      <p>This checks that your camera is fast and clear enough. Press the button, look at the screen, then blink slowly three times when asked.</p>
+      <div class="live">
+        <div class="stat">Frames per second<strong id="sFps">-</strong></div>
+        <div class="stat">Face found<strong id="sFace">-</strong></div>
+        <div class="stat">Blink signal<strong id="sBlink">-</strong></div>
+        <div class="stat">Eye openness<strong id="sEar">-</strong></div>
+      </div>
+      <p id="sensorMsg" class="notice-line" role="status"></p>
+      <div class="row">
+        <button id="sensorStart">Start check</button>
+        <button id="sensorGo" class="hidden">Continue to calibration</button>
+      </div>
+      <div id="sensorResult"></div>
+    </section>
+
+    <section id="calib" class="view">
+      <h2>Gaze calibration</h2>
+      <p>Sit comfortably, face the camera, and keep this browser window the same size. When you press the button, 9 dots appear one after another. Look at each dot until it moves. Keep your head fairly still.</p>
+      <div class="row">
+        <button id="beginCalib">Begin calibration</button>
+      </div>
+      <p id="calibStatus" class="muted" role="status"></p>
+      <div id="calibActions" class="row hidden">
+        <button id="calibGo">Continue to the lesson</button>
+        <button id="calibRetry" class="secondary">Retry calibration</button>
+      </div>
+    </section>
+
+    <section id="lesson" class="view">
+      <div id="adNotice" class="notice hidden" role="status">An ad appears to be playing. Attention analysis is paused until the lesson resumes.</div>
+      <div class="grid">
+        <div>
+          <div id="videoBox" class="videobox">
+            <video id="lessonVideo" src="assets/lesson.mp4" controls playsinline></video>
+            <div id="ytPlayer"></div>
+          </div>
+          <div id="readingBox" class="reading hidden"></div>
+          <button id="finishReading" class="hidden">I finished reading</button>
+        </div>
+        <aside>
+          <div class="metric">Attention risk <strong id="riskNow">-</strong></div>
+          <p class="muted small">Estimated live from your webcam. Snapshots appear in your report.</p>
+        </aside>
+      </div>
+      <div id="overlay" class="overlay hidden" role="dialog" aria-modal="true">
+        <div class="card">
+          <p id="overlayText"></p>
+          <div class="row" id="overlayBtns"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="quiz" class="view">
+      <h2>Quiz</h2>
+      <p id="qProgress" class="muted"></p>
+      <div id="quizBox">Generating questions…</div>
+      <p class="muted small">Answers are final once you press Next. Pick a confidence level to continue.</p>
+      <div class="row"><button id="nextQ" class="hidden" disabled>Next</button></div>
+    </section>
+
+    <section id="report" class="view">
+      <h2>Your report</h2>
+      <p class="muted">Snapshots exist only in this page. Closing or refreshing it deletes them.</p>
+      <div class="row">
+        <button id="pdfBtn">Download PDF report</button>
+        <button id="exportBtn" class="secondary">Download session data (no images)</button>
+        <button id="deleteBtn" class="secondary">Delete all my data</button>
+      </div>
+      <div id="dqBanner" class="notice hidden"></div>
+      <div id="reportStats" class="stats"></div>
+
+      <h3>Attention timeline (lesson)</h3>
+      <canvas id="timeline" height="120"></canvas>
+
+      <h3>When you were not focused</h3>
+      <div id="snapGrid" class="snaps"></div>
+
+      <h3>Gaze and blinks (lesson)</h3>
+      <div class="two">
+        <div><canvas id="gazeChart" height="140"></canvas></div>
+        <div><canvas id="blinkChart" height="140"></canvas></div>
+      </div>
+      <p id="densityCaption" class="muted small"></p>
+      <canvas id="density" width="320" height="200"></canvas>
+
+      <h3>Summary</h3>
+      <div id="reportNarrative">Writing report…</div>
+
+      <h3>Quiz, question by question</h3>
+      <div class="scroll"><table id="qTable"></table></div>
+    </section>
+  </main>
+
+  <div id="camDock" class="camdock hidden">
+    <video id="cam" autoplay muted playsinline></video>
+    <span>Camera on. Processed on this device only.</span>
+  </div>
+
+  <div id="calibOverlay" class="calibOverlay hidden">
+    <div id="calibDot" class="dot"></div>
+    <p id="calibText" class="calibText"></p>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="config.js"></script>
+  <script type="module" src="app.js"></script>
+</body>
+</html>
